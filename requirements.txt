@@ -10,3 +10,4 @@ pandas
 numpy
 pillow
 python-dotenv
+langchain-text-splitters
