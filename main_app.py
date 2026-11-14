@@ -116,7 +116,7 @@ elif view_mode == "GitHub PDF & Flipbook Hub":
     st.title("📖 PragyanAI GitHub PDF & Flipbook Viewer")
     st.markdown("Access and view official program PDFs hosted directly on your GitHub repository (`pragyanaischool/PragyanAI_Multiple_Programs`).")
     
-    # Mapping PDFs directly to GitHub Raw Content URLs
+    # Official GitHub Raw URLs for seamless rendering
     github_pdf_library = {
         "Enterprise Agentic AI Master Program": "https://raw.githubusercontent.com/pragyanaischool/PragyanAI_Multiple_Programs/main/data/Enterprise_Agentic_AI_Master_Program.pdf",
         "6-Month Offline Training & Placement": "https://raw.githubusercontent.com/pragyanaischool/PragyanAI_Multiple_Programs/main/data/PragyanAI-6%20Month%20Offline%20Training%20-%20Passed%20Out%20Students.pdf",
@@ -127,9 +127,8 @@ elif view_mode == "GitHub PDF & Flipbook Hub":
     pdf_url = github_pdf_library[selected_pdf_title]
     
     st.markdown(f"### 📄 Viewing: `{selected_pdf_title}`")
-    st.markdown(f"*Source URL:* `{pdf_url}`")
     
-    # Embed Google Docs Viewer iframe to render GitHub PDF smoothly in browser
+    # Render PDF using Google Docs Viewer wrapper to prevent 'No preview available' browser blocks
     viewer_iframe = f'<iframe src="https://docs.google.com/gview?url={pdf_url}&embedded=true" width="100%" height="700px" style="border-radius: 12px; border: 1px solid #334155;"></iframe>'
     st.markdown(viewer_iframe, unsafe_allow_html=True)
     
