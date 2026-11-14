@@ -57,7 +57,7 @@ view_mode = st.sidebar.radio(
     "Dashboard View",
     [
         "Executive KPI Dashboard", 
-        "Program Flipbook & Document Hub",
+        "GitHub PDF & Flipbook Hub",
         "RAG & GROQ LLM Assistant", 
         "Program Fee & ROI Calculator",
         "GitHub Code Explorer"
@@ -112,108 +112,43 @@ if view_mode == "Executive KPI Dashboard":
         "Completion Weight (%)": [15, 15, 20, 15, 20, 15],
     })
 
-elif view_mode == "Program Flipbook & Document Hub":
-    st.title("📖 PragyanAI Program Document & Flipbook Hub")
-    st.markdown("Select any of the 10 core programs below or upload a custom program PDF brochure to open its dedicated view with visual flyers and interactive flipbook spreads.")
+elif view_mode == "GitHub PDF & Flipbook Hub":
+    st.title("📖 PragyanAI GitHub PDF & Flipbook Viewer")
+    st.markdown("Access and view official program PDFs hosted directly on your GitHub repository (`pragyanaischool/PragyanAI_Multiple_Programs`).")
     
-    programs_mapping = {
-        "1. Industry-Integrated AI Engineering Program (4 Years)": {
-            "duration": "4 Years (8 Semesters)",
-            "desc": "Partnering with engineering colleges to offer an admission-oriented AI Engineering Program for 12th standard students[cite: 107].",
-            "image": "PragyanAI_4Year_Industry_Integrated_Program.png"
-        },
-        "2. 6-Month Offline Training & Placement Program": {
-            "duration": "6 Months Training + 12 Months Placement",
-            "desc": "Intensive offline AI & GenAI training in Bangalore with 100+ projects and startup MVP exposure[cite: 108].",
-            "image": "6Months_Program.png"
-        },
-        "3. 4-Semester 40-Day AI Engineering Workshop": {
-            "duration": "4 Semesters (40 Days Total)",
-            "desc": "On-campus training aligned with academic calendar covering 8 technical skill areas and 40 projects[cite: 109].",
-            "image": "4Sem_40Days_Program.jpg"
-        },
-        "4. 8-Weekend GenAI & Agentic AI Master Program": {
-            "duration": "8 Weekends + 3 Days Resort Capstone",
-            "desc": "Working professional masterclass covering Transformer mechanics, RAG, LangGraph multi-agent swarms[cite: 110, 111].",
-            "image": "IITG Program.jpg"
-        },
-        "5. IIT Guwahati & PragyanAI Skill Development Programme (SDP)": {
-            "duration": "2 Weeks (30 Hours Live Online)",
-            "desc": "12 AIML modules in collaboration with E&ICT Academy, IIT Guwahati, featuring hands-on learning[cite: 3].",
-            "image": "IITG Program.jpg"
-        },
-        "6. Flexible Bootcamps & Academic Integrations": {
-            "duration": "Half-Day to 5 Days",
-            "desc": "Workshops, Faculty Development Programs (FDP), and guest lectures aligned with university curricula.",
-            "image": "IITG Program.jpg"
-        },
-        "7. PragyanAI Skill Sprint PRO": {
-            "duration": "10 Days Offline + 15 Days Online Hackathon",
-            "desc": "Intensive daily hands-on and competitive hackathons delivering portfolio-ready projects.",
-            "image": "6Months_Program.png"
-        },
-        "8. Project Series (12–24 Months)": {
-            "duration": "12–24 Months (Fully Online)",
-            "desc": "Monthly structured projects across AI/ML and Data Analytics building strong GitHub portfolios.",
-            "image": "PragyanAI_4Year_Industry_Integrated_Program.png"
-        },
-        "9. 12-Month Working Professionals Program": {
-            "duration": "12 Months (Hybrid / Weekend)",
-            "desc": "Career acceleration for working professionals transitioning into GenAI and Agentic AI roles.",
-            "image": "IITG Program.jpg"
-        },
-        "10. 2-Year Advanced AI/ML Program": {
-            "duration": "2 Years (Work While You Learn)",
-            "desc": "6 months foundation followed by 18 months real team execution with monthly stipend and direct hiring pathway.",
-            "image": "6Months_Program.png"
-        }
+    # Mapping PDFs directly to GitHub Raw Content URLs
+    github_pdf_library = {
+        "Enterprise Agentic AI Master Program": "https://raw.githubusercontent.com/pragyanaischool/PragyanAI_Multiple_Programs/main/data/Enterprise_Agentic_AI_Master_Program.pdf",
+        "6-Month Offline Training & Placement": "https://raw.githubusercontent.com/pragyanaischool/PragyanAI_Multiple_Programs/main/data/PragyanAI-6%20Month%20Offline%20Training%20-%20Passed%20Out%20Students.pdf",
+        "IIT Guwahati SDP Proposal": "https://raw.githubusercontent.com/pragyanaischool/PragyanAI_Multiple_Programs/main/data/SDP_Proposal_EICT_IITG.pdf"
     }
     
-    selected_program = st.selectbox("Select Training Program to View", list(programs_mapping.keys()))
-    prog_data = programs_mapping[selected_program]
+    selected_pdf_title = st.selectbox("Select GitHub PDF Document", list(github_pdf_library.keys()))
+    pdf_url = github_pdf_library[selected_pdf_title]
+    
+    st.markdown(f"### 📄 Viewing: `{selected_pdf_title}`")
+    st.markdown(f"*Source URL:* `{pdf_url}`")
+    
+    # Embed Google Docs Viewer iframe to render GitHub PDF smoothly in browser
+    viewer_iframe = f'<iframe src="https://docs.google.com/gview?url={pdf_url}&embedded=true" width="100%" height="700px" style="border-radius: 12px; border: 1px solid #334155;"></iframe>'
+    st.markdown(viewer_iframe, unsafe_allow_html=True)
     
     st.markdown("---")
-    st.header(f"📌 Program View: {selected_program}")
-    
-    col_details, col_visual = st.columns([1, 1])
-    
-    with col_details:
-        st.subheader("📋 Program Overview & Highlights")
-        st.write(f"**Duration:** {prog_data['duration']}")
-        st.write(f"**Description:** {prog_data['desc']}")
-        st.markdown("### 🔑 Key Skill Stack")
-        st.success("✅ Python Full Stack, Data Science, Machine Learning, Deep Learning, GenAI & Agentic AI Swarms.")
-        st.markdown("### 🏆 Expected Outcomes")
-        st.info("• 100+ GitHub portfolio projects\n• Startup-Ready MVP or Industry Placement\n• Verifiable Digital Skill Passport")
-        
-    with col_visual:
-        st.subheader("🎨 Official Program Flyer & Visual Asset")
-        if os.path.exists(prog_data["image"]):
-            st.image(prog_data["image"], caption=f"Official Flyer — {selected_program}", use_container_width=True)
-        else:
-            st.image("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop", caption="Visual Asset Placeholder", use_container_width=True)
-
-    st.markdown("---")
-    st.subheader("📖 Interactive Digital PDF & Flipbook Spread Viewer")
-    st.markdown("Upload a program brochure or PDF document below to render an interactive document viewer and flipbook spread simulator.")
-    
-    uploaded_pdf = st.file_uploader("Upload Program PDF Brochure", type=["pdf"])
-    if uploaded_pdf is not None:
-        st.success(f"Successfully loaded: **{uploaded_pdf.name}**")
-        base64_pdf = base64.b64encode(uploaded_pdf.read()).decode("utf-8")
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600px" style="border-radius: 12px; border: 1px solid #334155;"></iframe>'
-        st.markdown(pdf_display, unsafe_allow_html=True)
-    else:
-        c_prev, c_view, c_next = st.columns([1, 5, 1])
-        with c_prev:
-            if st.button("◀ Previous Page"):
-                st.toast("Flipped back one page.")
-        with c_view:
-            st.info(f"📄 Interactive Flipbook Spread — **{selected_program}**")
-            st.image("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1200&auto=format&fit=crop", caption="Spread View (Pages 1 & 2)", use_container_width=True)
-        with c_next:
-            if st.button("Next Page ▶"):
-                st.toast("Flipped forward one page.")
+    st.subheader("📖 Digital Flipbook Spread View")
+    col_prev, col_spread, col_next = st.columns([1, 6, 1])
+    with col_prev:
+        if st.button("◀ Previous Spread"):
+            st.toast("Flipped back one spread.")
+    with col_spread:
+        st.info("Interactive dual-page spread simulator active.")
+        st.image(
+            "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1200&auto=format&fit=crop",
+            caption=f"Flipbook Spread — {selected_pdf_title}",
+            use_container_width=True
+        )
+    with col_next:
+        if st.button("Next Spread ▶"):
+            st.toast("Flipped forward one spread.")
 
 elif view_mode == "RAG & GROQ LLM Assistant":
     st.title("💬 Intelligent Program Advisor (RAG + Groq LLM)")
