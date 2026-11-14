@@ -1,40 +1,61 @@
 import os
-import streamlit as st
-from groq import Groq
+import pandas as pd
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
 
-def get_groq_client():
-    """Initializes and returns the Groq client using Streamlit secrets or environment variables."""
-    api_key = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", None))
-    if not api_key:
-        raise ValueError("❌ GROQ API Key not found in Streamlit secrets or environment variables.")
-    return Groq(api_key=api_key)
+def search_knowledge_base(query: str) -> str:
+    """
+    Searches the master CSV knowledge base for program details and matches keywords,
+    utilizing a FAISS vector store with HuggingFace embeddings for semantic retrieval
+    as specified in PragyanAI's RAG Architecture guidelines.
+    """
+    csv_path = "data/PragyanAI_All_Programs_FAQ_Master.csv"
+    if not os.path.exists(csv_path):
+        return "Knowledge base master CSV file not found. Please verify the data directory structure."
 
-def get_groq_response(prompt: str, context: str = "") -> str:
-    """
-    Sends a prompt combined with retrieved context to the Groq LLM model
-    and returns the generated text response.
-    """
     try:
-        client = get_groq_client()
+        df = pd.read_csv(csv_path)
         
-        system_prompt = (
-            "You are an expert AI Data Analytics Assistant and Program Manager for PragyanAI. "
-            "Help users understand data, pricing, conversions, program details, and insights. "
-            "Give clear, concise, and actionable answers."
-        )
-        
-        user_content = f"Context:\n{context}\n\nUser Question:\n{prompt}" if context else prompt
+        # Combine row elements into clean text documents for vector chunking
+        documents = []
+        for _, row in df.iterrows():
+            doc_text = " | ".join(f"{col}: {val}" for col, val in row.items() if pd.notna(val))
+            documents.append(doc_text)
 
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",  # Fast and powerful model route
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_content}
-            ],
-            temperature=0.3
-        )
-        
-        return response.choices[0].message.content
+        # Initialize text splitter for semantic chunking
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=64)
+        chunks = text_splitter.create_documents(documents)
+
+        # Initialize HuggingFace Embeddings & FAISS Vector Index
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        vector_db = FAISS.from_documents(chunks, embeddings)
+
+        # Perform similarity search
+        results = vector_db.similarity_search(query, k=3)
+
+        if not results:
+            return "PragyanAI offers 10 core industry-aligned AI engineering programs covering practical execution and RAG engineering."
+
+        context = "Retrieved Program Context via Semantic RAG:\n"
+        for res in results:
+            context += f"- {res.page_content}\n"
+        return context
 
     except Exception as e:
-        return f"❌ Error communicating with Groq API: {str(e)}"
+        # Fallback keyword matching if embeddings/FAISS environment encounter local dependencies issues
+        df = pd.read_csv(csv_path)
+        query_lower = query.lower()
+        matched_rows = []
+        for _, row in df.iterrows():
+            row_str = " ".join(str(val) for val in row.values).lower()
+            if any(kw in row_str for kw in query_lower.split() if len(kw) > 3):
+                matched_rows.append(row.to_dict())
+
+        if not matched_rows:
+            return "PragyanAI offers 10 core industry-aligned AI engineering programs ranging from B.E. integrations to working professional bootcamps."
+
+        context = "Retrieved Program Context (Keyword Fallback):\n"
+        for match in matched_rows[:3]:
+            context += f"- Program: {match.get('Program Name')} | Duration: {match.get('Duration')} | Pricing: {match.get('Pricing & Financials')} | Skills: {match.get('Key Skills Covered')}\n"
+        return context
