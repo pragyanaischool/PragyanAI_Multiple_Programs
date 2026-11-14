@@ -1,6 +1,9 @@
 import os
-import streamlit as st
 import base64
+import streamlit as st
+from PIL import Image
+from src.services.rag_engine import search_knowledge_base
+from src.services.groq_client import get_groq_response
 
 # Page Configuration & Executive Layout
 st.set_page_config(
@@ -111,7 +114,7 @@ if view_mode == "Executive KPI Dashboard":
 
 elif view_mode == "Program Flipbook & Document Hub":
     st.title("📖 PragyanAI Program Document & Flipbook Hub")
-    st.markdown("Select any program below to open its dedicated page view, complete with curriculum details, visual flyers, and interactive flipbook spreads.")
+    st.markdown("Select any of the 10 core programs below or upload a custom program PDF brochure to open its dedicated view with visual flyers and interactive flipbook spreads.")
     
     programs_mapping = {
         "1. Industry-Integrated AI Engineering Program (4 Years)": {
@@ -138,6 +141,31 @@ elif view_mode == "Program Flipbook & Document Hub":
             "duration": "2 Weeks (30 Hours Live Online)",
             "desc": "12 AIML modules in collaboration with E&ICT Academy, IIT Guwahati, featuring hands-on learning[cite: 3].",
             "image": "IITG Program.jpg"
+        },
+        "6. Flexible Bootcamps & Academic Integrations": {
+            "duration": "Half-Day to 5 Days",
+            "desc": "Workshops, Faculty Development Programs (FDP), and guest lectures aligned with university curricula.",
+            "image": "IITG Program.jpg"
+        },
+        "7. PragyanAI Skill Sprint PRO": {
+            "duration": "10 Days Offline + 15 Days Online Hackathon",
+            "desc": "Intensive daily hands-on and competitive hackathons delivering portfolio-ready projects.",
+            "image": "6Months_Program.png"
+        },
+        "8. Project Series (12–24 Months)": {
+            "duration": "12–24 Months (Fully Online)",
+            "desc": "Monthly structured projects across AI/ML and Data Analytics building strong GitHub portfolios.",
+            "image": "PragyanAI_4Year_Industry_Integrated_Program.png"
+        },
+        "9. 12-Month Working Professionals Program": {
+            "duration": "12 Months (Hybrid / Weekend)",
+            "desc": "Career acceleration for working professionals transitioning into GenAI and Agentic AI roles.",
+            "image": "IITG Program.jpg"
+        },
+        "10. 2-Year Advanced AI/ML Program": {
+            "duration": "2 Years (Work While You Learn)",
+            "desc": "6 months foundation followed by 18 months real team execution with monthly stipend and direct hiring pathway.",
+            "image": "6Months_Program.png"
         }
     }
     
@@ -167,23 +195,30 @@ elif view_mode == "Program Flipbook & Document Hub":
 
     st.markdown("---")
     st.subheader("📖 Interactive Digital PDF & Flipbook Spread Viewer")
-    st.markdown("Simulated digital spread view allowing page-by-page turning of official documentation.")
+    st.markdown("Upload a program brochure or PDF document below to render an interactive document viewer and flipbook spread simulator.")
     
-    c_prev, c_view, c_next = st.columns([1, 5, 1])
-    with c_prev:
-        if st.button("◀ Previous Page"):
-            st.toast("Flipped back one page.")
-    with c_view:
-        st.info(f"📄 Interactive Flipbook Spread — **{selected_program}**")
-        st.image("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1200&auto=format&fit=crop", caption="Spread View (Pages 1 & 2)", use_container_width=True)
-    with c_next:
-        if st.button("Next Page ▶"):
-            st.toast("Flipped forward one page.")
+    uploaded_pdf = st.file_uploader("Upload Program PDF Brochure", type=["pdf"])
+    if uploaded_pdf is not None:
+        st.success(f"Successfully loaded: **{uploaded_pdf.name}**")
+        base64_pdf = base64.b64encode(uploaded_pdf.read()).decode("utf-8")
+        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600px" style="border-radius: 12px; border: 1px solid #334155;"></iframe>'
+        st.markdown(pdf_display, unsafe_allow_html=True)
+    else:
+        c_prev, c_view, c_next = st.columns([1, 5, 1])
+        with c_prev:
+            if st.button("◀ Previous Page"):
+                st.toast("Flipped back one page.")
+        with c_view:
+            st.info(f"📄 Interactive Flipbook Spread — **{selected_program}**")
+            st.image("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1200&auto=format&fit=crop", caption="Spread View (Pages 1 & 2)", use_container_width=True)
+        with c_next:
+            if st.button("Next Page ▶"):
+                st.toast("Flipped forward one page.")
 
 elif view_mode == "RAG & GROQ LLM Assistant":
     st.title("💬 Intelligent Program Advisor (RAG + Groq LLM)")
-    st.markdown("Query curriculum guidelines, institutional pricing, and technical specifications instantly.")
-    
+    st.markdown("Query curriculum guidelines, institutional pricing, and technical specifications instantly using high-speed vector retrieval.")
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -197,10 +232,11 @@ elif view_mode == "RAG & GROQ LLM Assistant":
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            st.spinner("Retrieving semantic vectors and generating response...")
-            response = "PragyanAI offers industry-aligned AI engineering programs with rigorous hands-on execution, 100+ projects, and flexible placement/stipend options."
-            st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            with st.spinner("Retrieving semantic vectors and generating response..."):
+                retrieved_context = search_knowledge_base(prompt)
+                ai_response = get_groq_response(prompt, retrieved_context)
+                st.markdown(ai_response)
+                st.session_state.messages.append({"role": "assistant", "content": ai_response})
 
 elif view_mode == "Program Fee & ROI Calculator":
     st.title("🧮 Program Fee & Career ROI Estimator")
@@ -209,7 +245,11 @@ elif view_mode == "Program Fee & ROI Calculator":
     prog_type = st.selectbox("Choose Program", ["6-Month Super 30 Program", "8-Weekend Master Program", "4-Year B.E. Integration"])
     
     if prog_type == "6-Month Super 30 Program":
-        st.write("**Investment Breakdown:** ₹50,000 Initial Training Fee + ₹50,000 Success Fee (Post-Placement) = **₹1,00,000 Total**[cite: 102]")
+        tier = st.radio("Select Enrollment Tier", ["Founding Batch (Discounted + Success Fee)", "Standard Paid Track"])
+        if "Founding" in tier:
+            st.write("**Investment Breakdown:** ₹50,000 Initial Training Fee + ₹50,000 Success Fee (Post-Placement) = **₹1,00,000 Total**[cite: 102]")
+        else:
+            st.write("**Investment Breakdown:** Standard Flat Fee of **₹1,50,000** (Eligible for ₹10,000/mo stipend internship tier)")
     else:
         st.write("**Investment Breakdown:** All-inclusive promotional pricing starting at **₹50,000** including resort hackathon stay[cite: 148].")
         
@@ -231,6 +271,14 @@ elif view_mode == "GitHub Code Explorer":
     )
 
     if file_selected == "src/services/rag_engine.py":
-        st.code("# rag_engine.py code snippet", language="python")
+        with open("src/services/rag_engine.py", "r") as f:
+            st.code(f.read(), language="python")
+    elif file_selected == "src/services/groq_client.py":
+        with open("src/services/groq_client.py", "r") as f:
+            st.code(f.read(), language="python")
+    elif file_selected == "data/PragyanAI_All_Programs_FAQ_Master.csv":
+        with open("data/PragyanAI_All_Programs_FAQ_Master.csv", "r") as f:
+            st.code(f.read(), language="csv")
     else:
-        st.code("streamlit>=1.38.0\ngroq>=0.5.0\npandas>=2.0.0", language="text")
+        with open("requirements.txt", "r") as f:
+            st.code(f.read(), language="text")
