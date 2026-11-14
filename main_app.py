@@ -46,9 +46,9 @@ st.markdown(
 
 # Sidebar Navigation with Attached Transparent Logo
 if os.path.exists("assets/images/PragyanAI_Transperent_2.png"):
-  st.sidebar.image("assets/images/PragyanAI_Transperent_2.png", use_container_width=True)
+    st.sidebar.image("assets/images/PragyanAI_Transperent_2.png", use_container_width=True)
 else:
-  st.sidebar.title("⚡ PragyanAI Hub")
+    st.sidebar.title("⚡ PragyanAI Hub")
 
 st.sidebar.markdown("---")
 selected_program = st.sidebar.selectbox(
@@ -64,83 +64,173 @@ selected_program = st.sidebar.selectbox(
 
 view_mode = st.sidebar.radio(
     "Dashboard View",
-    ["Executive KPI Dashboard", "RAG & GROQ LLM Assistant", "GitHub Code Explorer"],
+    [
+        "Executive KPI Dashboard", 
+        "RAG & GROQ LLM Assistant", 
+        "Interactive Digital Flipbook",
+        "Program Fee & ROI Calculator",
+        "GitHub Code Explorer"
+    ],
 )
 
 # Main Content Renderer
 if view_mode == "Executive KPI Dashboard":
-  st.title("📊 Enterprise Program Analytics & ROI Dashboard")
-  st.markdown(
-      "Real-time operational metrics across institutional partnerships, active"
-      " cohorts, and student portfolio outcomes."
-  )
-
-  col1, col2, col3, col4 = st.columns(4)
-  with col1:
+    st.title("📊 Enterprise Program Analytics & ROI Dashboard")
     st.markdown(
-        '<div class="metric-card"><h3>1,000+</h3><p>Learning & Lab'
-        " Hours</p></div>",
-        unsafe_allow_html=True,
-    )
-  with col2:
-    st.markdown(
-        '<div class="metric-card"><h3>100+</h3><p>Verified Portfolio'
-        " Projects</p></div>",
-        unsafe_allow_html=True,
-    )
-  with col3:
-    st.markdown(
-        '<div class="metric-card"><h3>100%</h3><p>Placement Support &'
-        " Targeting</p></div>",
-        unsafe_allow_html=True,
-    )
-  with col4:
-    st.markdown(
-        '<div class="metric-card"><h3>₹10k</h3><p>Monthly Internship'
-        " Stipend Tier</p></div>",
-        unsafe_allow_html=True,
+        "Real-time operational metrics across institutional partnerships, active"
+        " cohorts, and student portfolio outcomes."
     )
 
-  st.markdown("---")
-  st.subheader(f"📈 Analytics Overview for: {selected_program}")
-  st.bar_chart({
-      "Skill Track": [
-          "Python Full Stack",
-          "Data Science & BI",
-          "Machine Learning",
-          "Deep Learning & CV",
-          "Generative AI & RAG",
-          "Agentic AI Swarms",
-      ],
-      "Completion Weight (%)": [15, 15, 20, 15, 20, 15],
-  })
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown(
+            '<div class="metric-card"><h3>1,000+</h3><p>Learning & Lab'
+            " Hours</p></div>",
+            unsafe_allow_html=True,
+        )
+    with col2:
+        st.markdown(
+            '<div class="metric-card"><h3>100+</h3><p>Verified Portfolio'
+            " Projects</p></div>",
+            unsafe_allow_html=True,
+        )
+    with col3:
+        st.markdown(
+            '<div class="metric-card"><h3>100%</h3><p>Placement Support &'
+            " Targeting</p></div>",
+            unsafe_allow_html=True,
+        )
+    with col4:
+        st.markdown(
+            '<div class="metric-card"><h3>₹10k</h3><p>Monthly Internship'
+            " Stipend Tier</p></div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("---")
+    st.subheader(f"📈 Analytics Overview for: {selected_program}")
+    st.bar_chart({
+        "Skill Track": [
+            "Python Full Stack",
+            "Data Science & BI",
+            "Machine Learning",
+            "Deep Learning & CV",
+            "Generative AI & RAG",
+            "Agentic AI Swarms",
+        ],
+        "Completion Weight (%)": [15, 15, 20, 15, 20, 15],
+    })
 
 elif view_mode == "RAG & GROQ LLM Assistant":
-  st.title("💬 Intelligent Program Advisor (RAG + Groq LLM)")
-  st.markdown(
-      "Query curriculum guidelines, institutional pricing, and technical"
-      " specifications instantly using high-speed vector retrieval."
-  )
+    st.title("💬 Intelligent Program Advisor (RAG + Groq LLM)")
+    st.markdown(
+        "Query curriculum guidelines, institutional pricing, and technical"
+        " specifications instantly using high-speed vector retrieval."
+    )
 
-  prompt = st.text_input(
-      "Ask a question about curriculum, admission criteria, or fees:",
-      placeholder=(
-          "e.g., What is covered in the 8th week of the working professionals"
-          " program?"
-      ),
-  )
+    # Initialize chat history state
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-  if st.button("Query RAG Engine"):
-    if prompt:
-      with st.spinner("Retrieving semantic vectors and generating response..."):
-        retrieved_context = search_knowledge_base(prompt)
-        ai_response = get_groq_response(prompt, retrieved_context)
-        st.success("Query Resolved Successfully via Vector Store & Groq LLM!")
-        st.markdown(f"**AI Advisor Response:**\n\n{ai_response}")
+    # Display prior messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt := st.chat_input("Ask a question about curriculum, admission criteria, or fees..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Retrieving semantic vectors and generating response..."):
+                retrieved_context = search_knowledge_base(prompt)
+                ai_response = get_groq_response(prompt, retrieved_context)
+                st.markdown(ai_response)
+                st.session_state.messages.append({"role": "assistant", "content": ai_response})
+
+elif view_mode == "Interactive Digital Flipbook":
+    st.title("📖 Digital Flipbook Reader & Pitch Deck Viewer")
+    st.markdown("Browse interactive program documentation, pitch decks, and course brochures.")
+    
+    deck_option = st.selectbox(
+        "Select Publication to Flip",
+        [
+            "PragyanAI Scaling Bharat Investor Deck",
+            "SiliconAI Pitch Deck",
+            "IITG SDP Course Brochure"
+        ]
+    )
+    
+    st.info(f"📄 Currently viewing spread for: **{deck_option}**")
+    
+    col_prev, col_display, col_next = st.columns([1, 6, 1])
+    with col_prev:
+        if st.button("◀ Prev"):
+            st.toast("Flipping back...")
+    with col_display:
+        st.image(
+            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop",
+            caption=f"Interactive Spread — {deck_option}",
+            use_container_width=True
+        )
+    with col_next:
+        if st.button("Next ▶"):
+            st.toast("Flipping forward...")
+
+elif view_mode == "Program Fee & ROI Calculator":
+    st.title("🧮 Program Fee & Career ROI Estimator")
+    st.markdown("Calculate tuition investments, stipend returns, and salary payback periods instantly.")
+    
+    prog_type = st.selectbox("Choose Program", ["6-Month Super 30 Program", "8-Weekend Master Program", "4-Year B.E. Integration"])
+    
+    if prog_type == "6-Month Super 30 Program":
+        tier = st.radio("Select Enrollment Tier", ["Founding Batch (Discounted + Success Fee)", "Standard Paid Track"])
+        if "Founding" in tier:
+            st.write("**Investment Breakdown:** ₹50,000 Initial Training Fee + ₹50,000 Success Fee (Post-Placement) = **₹1,00,000 Total**")
+        else:
+            st.write("**Investment Breakdown:** Standard Flat Fee of **₹1,50,000** (Eligible for ₹10,000/mo stipend internship tier)")
     else:
-      st.warning("Please enter a query.")
+        st.write("**Investment Breakdown:** All-inclusive promotional pricing starting at **₹50,000** including resort hackathon stay.")
+        
+    expected_salary = st.slider("Expected Starting Annual CTC (LPA)", 4.0, 30.0, 10.0, 0.5)
+    st.success(f"Estimated Payback Period at ₹{expected_salary} LPA: **Less than 3 to 5 months** of employment!")
 
 elif view_mode == "GitHub Code Explorer":
-  st.title("📂 GitHub Repository File Explorer")
-  st.markdown(
-      "Examine production-ready modular scripts configured for this program
+    st.title("📂 GitHub Repository File Explorer")
+    st.markdown("Examine production-ready modular scripts configured for this program.")
+
+    file_selected = st.selectbox(
+        "Select File to Inspect",
+        [
+            "src/services/rag_engine.py",
+            "src/services/groq_client.py",
+            "data/PragyanAI_All_Programs_FAQ_Master.csv",
+            "requirements.txt",
+        ],
+    )
+
+    if file_selected == "src/services/rag_engine.py":
+        if os.path.exists("src/services/rag_engine.py"):
+            with open("src/services/rag_engine.py", "r") as f:
+                st.code(f.read(), language="python")
+        else:
+            st.code("# rag_engine.py content placeholder", language="python")
+    elif file_selected == "src/services/groq_client.py":
+        if os.path.exists("src/services/groq_client.py"):
+            with open("src/services/groq_client.py", "r") as f:
+                st.code(f.read(), language="python")
+        else:
+            st.code("# groq_client.py content placeholder", language="python")
+    elif file_selected == "data/PragyanAI_All_Programs_FAQ_Master.csv":
+        if os.path.exists("data/PragyanAI_All_Programs_FAQ_Master.csv"):
+            with open("data/PragyanAI_All_Programs_FAQ_Master.csv", "r") as f:
+                st.code(f.read(), language="csv")
+        else:
+            st.code("Program Name,Duration,Pricing\nIndustry-Integrated,4 Years,Custom", language="csv")
+    else:
+        if os.path.exists("requirements.txt"):
+            with open("requirements.txt", "r") as f:
+                st.code(f.read(), language="text")
+        else:
+            st.code("streamlit>=1.38.0\ngroq>=0.5.0\npandas>=2.0.0", language="text")
